@@ -5,7 +5,8 @@ from scipy.linalg import solve_continuous_are
 import matplotlib.pyplot as plt
 
 # Define the ODE system
-a_1 = 0.1
+a_1 = 0.05
+a_2 = 0.1
 Q = np.eye(3)
 R = np.array([[1]])
 T = 0.01
@@ -15,12 +16,21 @@ def x_dot(X, t, a, b, u):
     x_1 = x[0,]
     x_2 = x[1,]
     x_3 = x[2,]
-    W_1_hat = X[3:,]
+    W_1_hat = X[3:9,]
+    W_2_hat = X[9:15,]
+
     cost = np.matmul(np.matmul(x.T,Q),x)+np.matmul(np.matmul(u.T,R/T),u)
     del_phi_1 = np.array([[2*x_1,0,0],[2*x_1,2*x_2,0],[2*x_3,0,2*x_1],[0,2*x_2,0],[0,2*x_3,2*x_2],[0,0,2*x_3]])
     sigma_1 = np.matmul(del_phi_1,np.matmul(a,x)+np.matmul(b,u))
     phi_1 = np.array([x_1**2,2*x_1*x_2,2*x_1*x_3,x_2**2,2*x_2*x_3,x_3**2])
     W_1_hat_dot = -a_1 * sigma_1/(np.matmul(sigma_1.T,sigma_1)+1)**2*(np.matmul(sigma_1.T,W_1_hat)+cost)
+    D_1 = np.matmul(np.matmul(np.matmul(np.matmul(del_phi_1,b),np.linalg.inv(R)),b.T),del_phi_1.T)
+    F2 = 1
+    F1 = 1
+    M = sigma_1/(np.matmul(sigma_1.T,sigma_1)+1)**2
+    W_2_hat_dot = -a_2* ((F2*W_2_hat)-(F1*np.matmul((sigma_1/(np.matmul(sigma_1.T,sigma_1)+1)).T,W_1_hat))-0.25*np.matmul(D_1,np.matmul(W_2_hat,(np.matmul(M.T,W_1_hat)).reshape(1,).T)))
+
+
     u = -0.5*T*np.matmul(np.matmul(np.matmul(np.linalg.inv(R), B.T), del_phi_1.T),W_1_hat)
     V_hat = np.matmul(W_1_hat.T, phi_1)
     # print(V_hat.shape,sigma_1.shape,W_1_hat_dot.shape,cost)
@@ -36,23 +46,29 @@ A = np.array([[-1.01887, 0.90506, -0.00215],[0.82225, -1.07741, -0.17555],[0,0,-
 B = np.array([[0],[0],[1]]) # parameter b
 u = np.array([1.0]) # input u
 W1_hat = np.zeros((6,1)).ravel()
+W2_hat = np.zeros((6,1)).ravel()
 # print(x0.shape,W1_hat.shape)
-initial_value = np.concatenate((x0,W1_hat))
+initial_value = np.concatenate((x0,W1_hat,W2_hat))
 # Define the time vector for integration
 t = np.linspace(0, 800, 1000)
 
 # Solve the ODE system using odeint
 x = odeint(x_dot, initial_value, t, args=(A, B, u))
-W1_data = x[:,3:]
+W1_data = x[:,3:8]
+W2_data = x[:,9:14]
 print(W1_data[0,:],'\n',W1_data[-1,:])
+print(W2_data[0,:],'\n',W2_data[-1,:])
 # Plot the solution
-fig,axes = plt.subplots(2,1)
+fig,axes = plt.subplots(3,1)
 axes[0].plot(t, x[:,1:3])
 axes[0].set_xlabel('Time')
 axes[0].set_ylabel('x')
 axes[1].plot(t,W1_data)
 axes[1].set_xlabel('Time')
 axes[1].set_ylabel('W1')
+axes[2].plot(t,W2_data)
+axes[2].set_xlabel('Time')
+axes[2].set_ylabel('W2')
 plt.show()
 
 
