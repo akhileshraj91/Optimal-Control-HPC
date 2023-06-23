@@ -1,4 +1,6 @@
 import numpy as np
+from scipy import linalg as la
+
 from scipy.linalg import solve_discrete_are
 from scipy.signal import cont2discrete
 import matplotlib.pyplot as plt
@@ -22,6 +24,11 @@ R = np.eye(1)
 #
 P = solve_discrete_are(Ad,Bd,Q,R)
 print(P)
+# P = P/100
+
+TEST = la.solve(R + Bd.T.dot(P).dot(Bd), Bd.T.dot(P).dot(Ad))
+# print(TEST)
+print(np.allclose(Ad.T.dot(P).dot(Ad) - P - Ad.T.dot(P).dot(Bd).dot(TEST), -Q))
 
 
 T = 0.01

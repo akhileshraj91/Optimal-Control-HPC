@@ -1,0 +1,31 @@
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy import linalg as la
+
+A = np.array([[0.9064,0.0816,-0.0005],[0.0743,0.9012,-0.0007],[0,0,0.1326]])
+B = np.array([[-0.0015],[-0.0096],[0.8673]])
+Q = np.eye(3)
+R = np.eye(1)
+alpha = 0.9
+A_bar = A/alpha
+B_bar = B/alpha
+
+P = la.solve_discrete_are(A_bar, B_bar, Q, R)
+print(P)
+TEST = la.solve(R + B_bar.T.dot(P).dot(B_bar), B_bar.T.dot(P).dot(A_bar))
+print(TEST)
+print(np.allclose(A_bar.T.dot(P).dot(A_bar) - P - A_bar.T.dot(P).dot(B_bar).dot(TEST), -Q))
+# F = -np.dot(np.dot(np.dot(np.linalg.inv(R+np.dot(np.dot(B_bar.T,P),B_bar)),B_bar.T),P),A_bar)
+# print(P)
+# print(F)
+
+
+# T = 0.001
+
+# tspan = 10
+# num_t = int(tspan/T)
+# time = np.linspace(0,tspan,num_t)
+
+# for k in time:
+#     # print(k)
+#     pass
